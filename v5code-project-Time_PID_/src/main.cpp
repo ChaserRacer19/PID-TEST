@@ -118,9 +118,9 @@ d8888b. d888888b d8888b.
     //const int MAX_SPEED = 127; //maximum speed as allowed by motors
     const int MIN_SPEED = 0;
 
-    float kP_dist = 0.1;
+    float kP_dist = 0.028;
     float kI_dist = 0.0001; //was.1
-    float kD_dist = 0.; //was.5
+    float kD_dist = 0.0151; //was.5
 
     float kP_diff = 0;
     float kI_diff = 0;
@@ -227,7 +227,7 @@ d8888b. d888888b d8888b.
       averageError_diff = tot_error_diff / iteration;
 
       wait(10,msec);
-      T1+=162.5;
+      T1+=40;
       con.Screen.print(rMotor1.position(deg));
     }
     con.Screen.print("done");
@@ -565,7 +565,7 @@ d8' `8b 88    88 `~~88~~' .8P  Y8. 888o  88 .8P  Y8. 88'YbdP`88 .8P  Y8. 88    8
 YP   YP ~Y8888P'    YP     `Y88P'  VP   V8P  `Y88P'  YP  YP  YP  `Y88P'  ~Y8888P' `8888Y'
 */
   void autonomous(void) {
-   drive(36,5,100);
+   drive(76,5,100);
   }
 //cringe
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
