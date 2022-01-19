@@ -14,8 +14,8 @@ motor ml1 = motor (PORT3, ratio36_1, true);
 motor ml2 = motor(PORT6, true);
 motor ml3 = motor(PORT17, false);
 motor rl = motor(PORT13, true);
-rotation michia = rotation(PORT10);
-inertial tom = inertial(PORT7);
+rotation michia = rotation(PORT7);
+inertial tom = inertial(PORT10);
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.

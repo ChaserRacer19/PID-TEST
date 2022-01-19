@@ -26,13 +26,14 @@ d8888b. d888888b d8888b.
 88      Y888888P Y8888D'
 */
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void turnPIDTime (double target, double time, bool reset = true, double i = 0) {
-    MiniPID pid = MiniPID(0.27, i, 1.8);
+  /*void turnPIDTime (double target, double T, bool reset = true, double i = 0) {
+    MiniPID pid = MiniPID(0.1, i, 0);
     pid.setOutputLimits(-127, 127);
     pid.setMaxIOutput(30);
     pid.setSetpointRange(900);
     //int bias = std::nearbyint(0.059722*target);
     int bias = 0;
+   
     //bias was 38
     float gyroCalibrationConst = 1;
     if(target < 0) {
@@ -46,20 +47,21 @@ d8888b. d888888b d8888b.
     }
     int iterations = 0;
     //int timeout = 0;
-    while(iterations < time) {
-      double output = pid.getOutput(tom.orientation(pitch,deg)/gyroCalibrationConst, target + bias);
+    while(iterations < T1) {
+      double output = pid.getOutput(tom.orientation(yaw,deg)/gyroCalibrationConst, target + bias);
       lMotor1.spin(fwd,-output,volt);
-      lMotor2.spin(fwd,-output,volt);
       rMotor1.spin(fwd,output,volt);
+      lMotor2.spin(fwd,-output,volt);
       rMotor2.spin(fwd,output,volt);
       wait(40,msec);
       iterations = iterations + 10;
+      T1+=.004;
     }
     lMotor1.spin(fwd,0,volt);
     lMotor2.spin(fwd,0,volt);
     lMotor1.spin(fwd,0,volt);
     rMotor2.spin(fwd,0,volt);
-  }
+  }*/
 
   //Helper Functions
   void resetRotaions()
@@ -69,6 +71,10 @@ d8888b. d888888b d8888b.
     rMotor1.resetPosition();
     rMotor2.resetPosition();
   } //resetEncoders
+
+  void resetInertialSenor(){
+    tom.resetHeading();
+  }
 
   void driveOn(int leftPower, int rightPower)
   {
@@ -98,6 +104,159 @@ d8888b. d888888b d8888b.
   {
     return ( seconds * 1000 );
   } //secondsToMsec
+   
+//TRUNING PID
+void turn(int target, float waitTimeSec, float speed)
+  {
+    con.Screen.clearScreen();
+    con.Screen.setCursor(1, 1);
+    con.Screen.print(timer());
+    con.Screen.print(rMotor1.position(deg));
+    
+
+   
+
+    float T1=0;
+
+    //const int MAX_SPEED = 127; //maximum speed as allowed by motors
+    const int MIN_SPEED = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    float kP_turn = 0.31;
+    float kI_turn = 0.0; //was.1
+    float kD_turn = 0.22; //was.5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      int error_turn = 0;
+  
+    int lastError_turn = 0;
+  
+      float integral_turn = 0;
+    int derivative_turn=2;
+
+
+    int timeLimitMsec = 1000*(waitTimeSec);
+
+    int power_turn;
+
+    float percentSpeed;
+    double iteration = 1;
+
+    float	tot_error_turn = 0;
+    float averageError_turn = 0;
+
+    //int rAverage =(rMotor1.position(deg)+rMotor2.position(deg)+rMotor3.position(deg))/3;
+    //int lAverage =(lMotor1.position(deg)+lMotor2.position(deg)+lMotor3.position(deg))/3;
+    resetInertialSenor();
+    con.Screen.setCursor(3, 3);
+    con.Screen.setCursor(4,4);
+    con.Screen.print("");
+
+    while((T1<timeLimitMsec)) 
+    {
+
+      con.Screen.clearScreen();
+      con.Screen.setCursor(1, 1);
+      //con.Screen.print(integral_dist);
+      con.Screen.print("t");
+      con.Screen.print(T1);
+      con.Screen.setCursor(2, 2);
+      //con.Screen.print(rMotor1.position(deg));
+      //con.Screen.setCursor(3, 3);
+      con.Screen.print("e");
+      con.Screen.setCursor(3, 3);
+      con.Screen.print("d");
+    
+
+      error_turn = target - tom.orientation(yaw,deg);
+      //slowly ramp up speed over 40 loops
+      percentSpeed = getPercentSpeed( iteration );
+      iteration ++;
+
+        if( error_turn != 0)
+      {
+        integral_turn = integral_turn + error_turn;
+      }
+      else
+      {
+        integral_turn = 0;
+      }
+                                                                  
+
+      derivative_turn = abs(error_turn - lastError_turn);
+    
+
+      lastError_turn = error_turn;
+      
+
+      power_turn = (error_turn * kP_turn) + (integral_turn * kI_turn) - (derivative_turn * kD_turn);
+ 
+
+      /*if( abs(power_dist) > speed )
+      {
+        power_dist = speed * abs(power_dist)/power_dist;
+      }*/
+
+      int leftMotorSpeed =  MIN_SPEED + (power_turn) * percentSpeed;
+      int rightMotorSpeed = MIN_SPEED + (power_turn)  * percentSpeed;
+
+      //driveOn( leftMotorSpeed, rightMotorSpeed );
+      lMotor1.spin(fwd,leftMotorSpeed,volt);
+      lMotor2.spin(fwd,leftMotorSpeed,volt);
+      rMotor1.spin(fwd,-rightMotorSpeed,volt);
+      rMotor2.spin(fwd,-rightMotorSpeed,volt);
+
+
+      tot_error_turn = tot_error_turn + error_turn;
+      averageError_turn = tot_error_turn / iteration;
+
+      wait(10,msec);
+      T1+=40;
+      con.Screen.print(rMotor1.position(deg));
+    }
+    con.Screen.print("done");
+      rMotor1.setBrake(coast);
+      lMotor1.setBrake(coast);
+      rMotor2.setBrake(coast);
+      lMotor2.setBrake(coast);
+      rMotor1.spin(fwd,0,volt);
+      lMotor1.spin(fwd,0,volt);
+      rMotor2.spin(fwd,0,volt);
+      lMotor2.spin(fwd,0,volt);
+      
+
+
+
+
+  }
 
 
   //int t1 = timer();
@@ -120,7 +279,7 @@ d8888b. d888888b d8888b.
 
     float kP_dist = 0.028;
     float kI_dist = 0.0001; //was.1
-    float kD_dist = 0.0151; //was.5
+    float kD_dist = 0.00945; //was.5
 
     float kP_diff = 0;
     float kI_diff = 0;
@@ -255,7 +414,6 @@ d8888b. d888888b d8888b.
 88  88  88 88   88 88  V888 88b  d88 88   88 88booo.   88      88b  d88 88  V888 Y8b  d8    88      .88.   `8b  d8' 88  V888 db   8D
 YP  YP  YP YP   YP VP   V8P ~Y8888P' YP   YP Y88888P   YP      ~Y8888P' VP   V8P  `Y88P'    YP    Y888888P  `Y88P'  VP   V8P `8888Y'
 */
-// cringe amoung us fortnite.
   void drfwd(double dis,double speed,bool waitUntilComplete){
     int a = 700;
     lMotor1.setVelocity(speed, pct);
@@ -565,7 +723,7 @@ d8' `8b 88    88 `~~88~~' .8P  Y8. 888o  88 .8P  Y8. 88'YbdP`88 .8P  Y8. 88    8
 YP   YP ~Y8888P'    YP     `Y88P'  VP   V8P  `Y88P'  YP  YP  YP  `Y88P'  ~Y8888P' `8888Y'
 */
   void autonomous(void) {
-   drive(76,5,100);
+   turn(90, 5, 100);
   }
 //cringe
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
